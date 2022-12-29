@@ -38,6 +38,12 @@ def main():
                 torrent.add_tags(tags="RARed")
                 # sys.exit()
                 break
+            if torrentDict["name"].endswith(".bdmv"):
+                logging.info("Bluray Disc torrent found with name: " + torrent["name"])
+                # If the torrent has ".bdmv" files, add the "BDRaw" tag to it
+                torrent.add_tags(tags="BDRaw")
+                # sys.exit()
+                break
 
     # Log out of the qBittorrent web UI
     qb.auth_log_out()
