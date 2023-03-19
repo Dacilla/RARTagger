@@ -18,13 +18,13 @@ def main():
     logging.debug("Username: " + username)
     logging.debug("Password: " + password)
     logging.info("Logging in to qbit...")
-    qb = qbittorrentapi.Client("http://192.168.1.114:8080", username=username, password=password)
+    qb = qbittorrentapi.Client("http://192.168.1.114:8080", username=username, password=password, REQUESTS_ARGS={'timeout': (60, 60)})
     # Login to the qBittorrent web UI
     qb.auth_log_in()
 
     # Get a list of all the torrents
     torrents = qb.torrents_info()
-
+    blurayStrings = ["BR", "BluRay", "BD", "Blu-Ray", "Blu-ray"]
     # Iterate through each torrent
     for torrent in torrents:
         torrent:qbittorrentapi.TorrentDictionary
@@ -38,7 +38,7 @@ def main():
                 torrent.add_tags(tags="RARed")
                 # sys.exit()
                 break
-            if torrentDict["name"].endswith(".bdmv"):
+            if torrentDict["name"].endswith(".bdmv") or (any(x in torrentDict["name"] for x in blurayStrings) and torrentDict["name"].endswith(".iso")):
                 logging.info("Bluray Disc torrent found with name: " + torrent["name"])
                 # If the torrent has ".bdmv" files, add the "BDRaw" tag to it
                 torrent.add_tags(tags="BDRaw")
@@ -47,6 +47,7 @@ def main():
 
     # Log out of the qBittorrent web UI
     qb.auth_log_out()
+
 
 if __name__ == "__main__":
     main()
