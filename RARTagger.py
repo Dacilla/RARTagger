@@ -17,33 +17,45 @@ def main():
         password = lines[1].strip()
     logging.debug("Username: " + username)
     logging.debug("Password: " + password)
+
     logging.info("Logging in to qbit...")
-    qb = qbittorrentapi.Client("http://192.168.1.114:8080", username=username, password=password, REQUESTS_ARGS={'timeout': (60, 60)})
+    qb = qbittorrentapi.Client("http://192.168.1.114:8080", username=username, password=password, REQUESTS_ARGS={'timeout': (300, 300)})
     # Login to the qBittorrent web UI
     qb.auth_log_in()
 
-    # Get a list of all the torrents
-    torrents = qb.torrents_info()
-    blurayStrings = ["BR", "BluRay", "BD", "Blu-Ray", "Blu-ray"]
-    # Iterate through each torrent
-    for torrent in torrents:
-        torrent:qbittorrentapi.TorrentDictionary
-        # print(torrent.files)
-        for file in torrent.files:
-            torrentDict = dict(file)
-            logging.debug(torrentDict)
-            if torrentDict["name"].endswith(".r01"):
-                logging.info("RARed torrent found with name: " + torrent["name"])
-                # If the torrent has ".r01" files, add the "RARed" tag to it
-                torrent.add_tags(tags="RARed")
-                # sys.exit()
-                break
-            if torrentDict["name"].endswith(".bdmv") or (any(x in torrentDict["name"] for x in blurayStrings) and torrentDict["name"].endswith(".iso")):
-                logging.info("Bluray Disc torrent found with name: " + torrent["name"])
-                # If the torrent has ".bdmv" files, add the "BDRaw" tag to it
-                torrent.add_tags(tags="BDRaw")
-                # sys.exit()
-                break
+    logging.info("Logged in to qbit.")
+    logging.info("Getting list of categories...")
+    categories = qb.torrent_categories.categories.keys()
+    foundTorrents = []
+    for category in categories:
+        attempts = 0
+        readSuccess = False
+        torrents = None
+        logging.info("Reading category: " + category)
+
+        # Get a list of all the torrents
+        # torrents = qb.torrents_info(category='tv-sonarr')
+        torrents = qb.torrents_info(category=category)
+        blurayStrings = ["BR", "BluRay", "BD", "Blu-Ray", "Blu-ray"]
+        # Iterate through each torrent
+        for torrent in torrents:
+            torrent:qbittorrentapi.TorrentDictionary
+            # print(torrent.files)
+            for file in torrent.files:
+                torrentDict = dict(file)
+                logging.debug(torrentDict)
+                if torrentDict["name"].endswith(".r01"):
+                    logging.info("RARed torrent found with name: " + torrent["name"])
+                    # If the torrent has ".r01" files, add the "RARed" tag to it
+                    torrent.add_tags(tags="RARed")
+                    # sys.exit()
+                    break
+                if torrentDict["name"].endswith(".bdmv") or (any(x in torrentDict["name"] for x in blurayStrings) and torrentDict["name"].endswith(".iso")):
+                    logging.info("Bluray Disc torrent found with name: " + torrent["name"])
+                    # If the torrent has ".bdmv" files, add the "BDRaw" tag to it
+                    torrent.add_tags(tags="BDRaw")
+                    # sys.exit()
+                    break
 
     # Log out of the qBittorrent web UI
     qb.auth_log_out()
